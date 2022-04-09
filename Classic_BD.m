@@ -1,16 +1,23 @@
-function [OptX,OptY,OptValue,k] = Classic_BD(C,D,A,B,b,F,r)
+function [OptX,OptY,OptValue,k] = Classic_BD(C,D,A,B,b,E,h,F,r)
 % classical benders decomposition (CBD) matlab-based programming code
 % Author: Chao Lei with The Hong Kong Polytechnic University 
 % What kind of problems can hire this CBD algorithm to solve?
 % This kind of problems is w.r.t. the following form:
 %         min  C*x+D*y
 %         s.t. A*x+B*y<=b; x in {0,1},and y>=0
+%              E*y=h;
 %              F*x=r;
+%         s.t. ; x in {0,1},and y>=0
 
 % stopping criteria of GBD algorithm when abs(LB-UB) is less than epsilon
 epsilon = 1e-4;
-[nRowA,nColA] = size(A);
-[nRowB,nColB] = size(B);
+[nRowE,nColE] = size(E);
+At = [A;zeros(2*nRowE,size(A,2))];        % convert to [A;0;0]*x+[B;E;-E]*y<=[b;h;-h]
+Bt = [B;E;-E];
+bt = [b;h;-h];
+
+[nRowA,nColA] = size(At);
+[nRowB,nColB] = size(Bt);
 % initialization for CBD
 x0 = zeros(nColA,1);  % initial points for 0-1 integer variables
 LB = -1e10;
@@ -27,11 +34,11 @@ options = optimset('LargeScale', 'off', 'Simplex', 'on');
 while k<kmax
     
     %-----step 1:solve sub-problem (LP-based model only with y)-------%
-    [UorV,fval,exitflag] = linprog((-A*x0+b),-B',D',[],[],zeros(nRowB,1),inf(nRowB,1),[],options);
+    [UorV,fval,exitflag] = linprog((-At*x0+bt),-Bt',D',[],[],zeros(nRowB,1),inf(nRowB,1),[],options);
     if exitflag == 1 % if sub-problem has extreme points
         p = p+1;
         u(p,:) = UorV'; % extreme points
-        UB = C*x0 + u(p,:)*(-b+A*x0);
+        UB = C'*x0 + u(p,:)*(-bt+At*x0);
     elseif exitflag == -3 % if sub-problem is unbounded
         q = q+1;
         v(q,:) = UorV'/1e16;% extreme rays
@@ -42,24 +49,20 @@ while k<kmax
     CoefZ = 1;
     f = [CoefZ,zeros(1,nColA)];                                        % coefficients of objective function
     if p>0
-        CoefMatZX = [-ones(p,1), repmat(C,p,1) + u(1:p,:)*A;   % optimal cuts
-        zeros(q,1),v(1:q,:)*A ;                                % feasible cuts
-        zeros(size(F,1),1),F;
-        zeros(size(F,1),1),-F
+        CoefMatZX = [-ones(p,1), repmat(C',p,1) + u(1:p,:)*At;   % optimal cuts
+        zeros(q,1),v(1:q,:)*At ;                                % feasible cuts
             ];
     else
         CoefMatZX = [
-        zeros(q,1),v(1:q,:)*A ;                   % feasible cuts
-        zeros(size(F,1),1),F;
-        zeros(size(F,1),1),-F                             
+        zeros(q,1),v(1:q,:)*At ;                   % feasible cuts            
             ];
     end
     
-    bZX = [u(1:p,:)*b;v(1:q,:)*b;r;-r];
-    vlb = zeros(1,size(C,2)+1);
-    vub=[inf, ones(1,size(C,2))];
-    ctype = char([ repmat({'C'},1,1) repmat({'I'},1,size(C,2))])';
-    [OptZX,minZ,ExitflagBint] = cplexmilp(f,CoefMatZX,bZX, [], [],[ ], [ ], [ ], vlb, vub, ctype, [ ],options_cplex );
+    bZX = [u(1:p,:)*bt;v(1:q,:)*bt];
+    vlb = zeros(1,size(C,1)+1);
+    vub=[inf, ones(1,size(C,1))];
+    ctype = char([ repmat({'C'},1,1) repmat({'I'},1,size(C,1))])';
+    [OptZX,minZ,ExitflagBint] = cplexmilp(f,CoefMatZX,bZX, [zeros(size(F,1),1),F], r,[ ], [ ], [ ], vlb, vub, ctype, [ ],options_cplex );
     
     if ExitflagBint ==1
         x0 = OptZX(2:end);
@@ -81,5 +84,5 @@ while k<kmax
     
 end
 OptX = x0;
-[OptY,OptValue] = linprog(D',B,-A*OptX+b,[],[],zeros(nColB,1),inf(nColB,1),[],options);
-OptValue = C*OptX+D*OptY;
+[OptY,OptValue] = linprog(D',B,-A*OptX+b,E,h,zeros(nColB,1),inf(nColB,1),[],options);
+OptValue = C'*OptX+D'*OptY;
