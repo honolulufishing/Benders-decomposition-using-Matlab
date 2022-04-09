@@ -21,5 +21,7 @@ where sub-problem is a SOCP-based model and realxed master model is a MILP-based
 If you have any questions, please feel free to contact me. Thank you.
 
 Author: Chao Lei
+
+Email: 21118924r@connect.polyu.hk 
+
 April, 2022
-Email:21118924r@connect.polyu.hk 
