@@ -5,6 +5,7 @@ For a linear problem, we use classical benders decomposition tools to solve this
 
          min  C*x+D*y
          s.t. A*x+B*y<=b; 
+              E*y=h;
               F*x=r;
               x in {0,1},and y>=0
               
