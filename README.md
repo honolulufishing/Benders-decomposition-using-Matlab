@@ -32,12 +32,11 @@ For a MISOCP problem, we use the generalized benders decomposition method to sol
               y'*Q*y+l'*y<=g
               x in {0,1},and y>=0
 
-Please note that this model aslo satisfy the third conditon: iii) Linear independence: with given discrete variables x, groups of continuous variables y are linearly independent. These three characteristics indicate that a SOCP-based model can be decompsoed into a relaxed master problem with respect to x and many sub problems with respect to y, which sub-problem can be solved in parallel. 
+Please note that this model aslo satisfy the third conditon: iii) Linear independence: with given discrete variables x, groups of continuous variables y are linearly independent. These three characteristics indicate that a SOCP-based model can be decompsoed into a relaxed master problem with respect to x and multiple sub problems with respect to y, which multiple sub-problems can be solved in parallel. 
 
 For example, 
 
-                                  ![CodeCogsEqn](https://user-images.githubusercontent.com/102128721/163716346-8457716b-b62d-4935-a842-daeffdc9bc0a.png)
-
+![CodeCogsEqn](https://user-images.githubusercontent.com/102128721/163716575-bdaa3d1a-771c-437f-a1a4-83eb652e0024.png)
 
 We use our the family of benders decompostion methods to solve this problem as
 
