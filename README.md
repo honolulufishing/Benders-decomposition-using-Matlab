@@ -1,7 +1,7 @@
 # Multi-cut-Generalized-Benders-decomposition-using-Matlab
-This is a matlab-based package to solve a large-scale linear or quadratic constrained convex programming problem using the classical benders decomposition, generalized benders decomposition method and multi-cut generalized benders decomposition method. The theory of multi-cut generalized benders decomposition method can be found in our research paper. Please note that this matlab coding package is constructed on the MOSEK ApS and CPLEX toolbox. The uploaded Matlab files are our initial codes, and which will be issued very soon. 
+This is a matlab-based package to solve a large-scale linear or quadratic constrained convex programming problem using the classical benders decomposition (CBD), generalized benders decomposition method (GBD) and multi-cut generalized benders decomposition method (MGBD). The theory of multi-cut generalized benders decomposition method can be found in our research paper. Please note that the matlab-based codes are constructed on the MOSEK ApS and CPLEX toolbox. The uploaded matlab files are our initial codes, but the complete version will be issued very soon. 
 
-For a linear problem, we use the classical benders decomposition tools to solve this problem, which is cast as the following form:
+For a linear problem, we use the classical benders decomposition method to solve this problem, which is cast as the following form:
 
          min  C*x+D*y
          s.t. A*x+B*y<=b; 
@@ -63,7 +63,7 @@ We use our the family of benders decompostion methods to solve this problem as
      r_ls = 2;
  
      % SOCP constraints
-     Qs = {diag([1;1;1.0e-10;1.0e-10]);diag([1.0e-10;1.0e-10;1;1])}; % y1-y2; y3-y4
+     Qs = {diag([1;1;1.0e-10;1.0e-10]);diag([1.0e-10;1.0e-10;1;1])}; 
      gs = [64;50];
      ls = zeros(4,2);
 
@@ -82,7 +82,7 @@ We use our the family of benders decompostion methods to solve this problem as
      sum(delta_T,1) + sum(delta_T_MP,1)
      % ------------------- END --------------------%
 
-The running time for MGBD is 0.0120 s, while the time cost of using GBD is 0.0360 s. The MGBD method runs more quickly than GBD method for this model only with two block matrices.
+The running time for MGBD is 0.0120 s, while the time cost using GBD is 0.0360 s. The MGBD method runs more quickly than GBD method for this model only with two block matrices.
 
 If you have any questions, please feel free to contact me. Thank you.
 
