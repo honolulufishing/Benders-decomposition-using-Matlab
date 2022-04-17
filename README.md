@@ -1,5 +1,5 @@
-# Benders-decomposition-using-Matlab
-This is a matlab-based package to solve a large-scale linear programming problem using classical benders decomposition and a socp problem using generalized benders decomposition method. 
+# Multi-cut-Generalized-Benders-decomposition-using-Matlab
+This is a matlab-based package to solve a large-scale linear or quadratic constrained convex programming problem using the classical benders decomposition, generalized benders decomposition method and multi-cut generalized benders decomposition method. 
 
 For a linear problem, we use classical benders decomposition tools to solve this problem, which is cast as the following form:
 
