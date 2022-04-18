@@ -1,5 +1,5 @@
 # Multi-cut-Generalized-Benders-decomposition-using-Matlab
-This is a matlab-based package to solve a large-scale linear or quadratic constrained convex programming problem using the classical benders decomposition (CBD), generalized benders decomposition method (GBD) and multi-cut generalized benders decomposition method (MGBD). The theory of multi-cut generalized benders decomposition method can be found in our research paper. Please note that the matlab-based codes are constructed on the MOSEK ApS and CPLEX toolbox. The uploaded matlab files are our initial codes, but the complete version will be issued very soon. 
+This is a matlab-based package to solve a large-scale linear or quadratic constrained convex programming problem using the classical benders decomposition (CBD), generalized benders decomposition method (GBD) and multi-cut generalized benders decomposition method (MGBD). The theory of multi-cut generalized benders decomposition method can be found in our research paper. Please note that the matlab-based codes are constructed on the MOSEK ApS and CPLEX toolbox. The uploaded matlab files are our initial codes, but the full version will be issued very soon. 
 
 For a linear problem, we use the classical benders decomposition method to solve this problem, which is cast as the following form:
 
