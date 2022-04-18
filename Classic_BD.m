@@ -1,4 +1,4 @@
-function [OptX,OptY,OptValue,k] = Classic_BD(C,D,A,B,b,E,h,F,r)
+function [OptX,OptY,OptValue,k] = Classic_BD(C,D,A,B,b,E,h,F,r_le,G,r_ls)
 % classical benders decomposition (CBD) matlab-based programming code
 % Author: Chao Lei with The Hong Kong Polytechnic University 
 % What kind of problems can hire this CBD algorithm to solve?
@@ -6,8 +6,8 @@ function [OptX,OptY,OptValue,k] = Classic_BD(C,D,A,B,b,E,h,F,r)
 %         min  C*x+D*y
 %         s.t. A*x+B*y<=b; x in {0,1},and y>=0
 %              E*y=h;
-%              F*x=r;
-%         s.t. ; x in {0,1},and y>=0
+%              F*x<=r_le;
+%              G*x=r_ls;
 
 % stopping criteria of GBD algorithm when abs(LB-UB) is less than epsilon
 epsilon = 1e-4;
@@ -62,7 +62,9 @@ while k<kmax
     vlb = zeros(1,size(C,1)+1);
     vub=[inf, ones(1,size(C,1))];
     ctype = char([ repmat({'C'},1,1) repmat({'I'},1,size(C,1))])';
-    [OptZX,minZ,ExitflagBint] = cplexmilp(f,CoefMatZX,bZX, [zeros(size(F,1),1),F], r,[ ], [ ], [ ], vlb, vub, ctype, [ ],options_cplex );
+    
+    
+    [OptZX,minZ,ExitflagBint] = cplexmilp(f,CoefMatZX,bZX, [zeros(size(F,1),1),F], r_le,[zeros(size(G,1),1),G], r_ls, [ ], vlb, vub, ctype, [ ],options_cplex );
     
     if ExitflagBint ==1
         x0 = OptZX(2:end);
