@@ -53,8 +53,9 @@ Methods for Comparison:
              50               450             11.351       0.006      0.025
             100               900           out of memory  0.006      0.049
             500              4500           out of memory  0.010      0.325
+            600              5400           out of memory  0.011      0.434
 
- We can see that our MGBD runs more quickly than GBD and GSOCP solvers. 
+In summary, We can see that our MGBD runs more quickly than GBD and GSOCP solvers. 
  
 If you have any questions, please feel free to contact me. Thank you.
 
