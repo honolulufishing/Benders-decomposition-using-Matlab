@@ -46,13 +46,13 @@ Methods for Comparison:
 3. GSOCP - Globally solving method by MOSEK
 
 
-                  Computation Time (seconds)
-        No. of Scenarios  Num of variables      GBD        MGBD       GSOCP         
-              1                                 0.060      0.005      0.010
-             10                                 0.104      0.006      0.012
-             50                               11.3510      0.006      0.025
-            100                           out of memory    0.006      0.049
-            500                           out of memory    0.010      0.325
+                              Computation Time (seconds)
+        No. of Scenarios  Num of variables      GBD        MGBD      GSOCP         
+              1               9                0.060      0.005      0.010
+             10               90               0.104      0.006      0.012
+             50               450             11.351      0.006      0.025
+            100              900           out of memory  0.006      0.049
+            500              4500          out of memory  0.010      0.325
 
  We can see that our MGBD runs more quickly than GBD and GSOCP solvers. 
  
