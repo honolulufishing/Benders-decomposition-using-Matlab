@@ -1,23 +1,62 @@
-# Benders-decomposition-using-Matlab
-This is a matlab-based package to solve a large-scale linear programming problem using classical benders decomposition and a socp problem using generalized benders decomposition method. 
+# Multi-cut-Generalized-Benders-decomposition-using-Matlab
+This is a matlab-based package to solve a large-scale linear or quadratic constrained convex programming problem using classical benders decomposition method, generalized and multi-cut benders decomposition methods. This matlab-based package is constructed with the MOSEK Aps 7.0 and CPLEX v12.7 using their MILP and SOCP solvers. Regarding the theory of multi-cut benders decomposition methods, please refer to our research work paper. Please kindly note that this matlab programming package is issued as our initial version, which full version will be updated soon. 
 
-For a linear problem, we use classical benders decomposition tools to solve this problem, which is cast as the following form:
-
-         min  C*x+D*y
-         s.t. A*x+B*y<=b; 
-              F*x=r;
-              x in {0,1},and y>=0
-              
-For a MISOCP problem, we use generalized benders decomposition method to solve this problem, which is cast as the following form:
+For a linear problem, we use the classical benders decomposition method (CBD) to solve this problem, which is cast as the following form:
 
          min  C*x+D*y
          s.t. A*x+B*y<=b; 
               E*y=h;
-              F*x=r;
+              F*x<=r_le;
+              G*x=r_ls;
+              x in {0,1},and y>=0
+              
+For a MISOCP problem, we use the generalized benders decomposition method (GBD) to solve this problem with the following standard form:
+
+         min  C*x+D*y
+         s.t. A*x+B*y<=b; 
+              E*y=h;
+              F*x<=r_le;
+              G*x=r_ls;
               y'*Q*y+l'*y<=g
               x in {0,1},and y>=0
+              
 where sub-problem is a SOCP-based model and realxed master model is a MILP-based model. Please kindly note that this MISOCP problem has two conditions to be satisfied: i) Convexity: the problem should be convex on y given the discrete variables x; ii) Linear separability: the problem should be linear on x given the continuous variables y.
 
+Based on the above-mentioned MISOCP problem, we use the multi-cut generalized benders decomposition method (MGBD) to solve this problem expressed as the following standard form:
+
+         min  C*x+D*y
+         s.t. A*x+B*y<=b; 
+              E*y=h;
+              F*x<=r_le;
+              G*x=r_ls;
+              y'*Q*y+l'*y<=g
+              x in {0,1},and y>=0
+
+Please note that this model need to satisfy the third condition: iii) Linear independence: with given discrete variables x, groups of continuous variables y are linearly independent.
+
+To examine the efficiency of this family of benders decompositon methods, we present the running time for a large-scale MISOCP-based optimization problem. This MISOCP problem contains 5 binary variables and 4 continuous variables as the basic scenario. Increasing the number of scenarios M, the number of binary variables and continuous variables are risen to 5*M and 4*M. 
+
+Solvers:
+- MILP solver : CPLEX v12.7
+- SOCP solver: MOSEK v7
+
+Methods for Comparison:
+1. GBD - Generalized benders decomposition method
+2. MGBD - Multi-cut generalized benders decomposition method
+3. GSOCP - Globally solving method by MOSEK
+
+  ---------------------------------------------------------
+                  Computation Time (seconds)
+  ---------------------------------------------------------
+  No. of Scenarios    GBD    MGBD   GSOCP         
+       1
+      10
+      50
+     100
+     500
+  ---------------------------------------------------------  
+ 
+ 
 If you have any questions, please feel free to contact me. Thank you.
 
 Author: Chao Lei
