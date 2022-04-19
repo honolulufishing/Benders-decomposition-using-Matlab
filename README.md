@@ -47,7 +47,7 @@ Methods for Comparison:
 
 
                               Computation Time (seconds)
-        No. of Scenarios  Num of variables      GBD        MGBD      GSOCP         
+        No. of Scenarios  Num of variables      GBD        MGBD       GSOCP         
               1                 9              0.060       0.005      0.010
              10                90              0.104       0.006      0.012
              50               450             11.351       0.006      0.025
@@ -55,7 +55,7 @@ Methods for Comparison:
             500              4500           out of memory  0.010      0.325
             600              5400           out of memory  0.011      0.434
 
-In summary, We can see that our MGBD runs more quickly than GBD and global solver by MOSEK. 
+In summary, we can see that our MGBD runs more quickly than GBD and global solver by MOSEK. 
  
 If you have any questions, please feel free to contact me. Thank you.
 
