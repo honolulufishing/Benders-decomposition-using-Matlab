@@ -1,7 +1,7 @@
-function [OptX,OptY,OptValue,k,delta_T,delta_T_MP] = General_MBD_socp(C,D,A,B,b,E,h,F,r_le,G,r_ls,Qs,gs,ls,n_block,n_y,lb_y,ub_y)
-% modified generalized benders decomposition (Modified GBD) matlab-based programming code
+function [OptX,OptY,OptValue,k,delta_T,delta_T_MP] = General_AMBD_socp(C,D,A,B,b,E,h,F,r_le,G,r_ls,Qs,gs,ls,n_block,n_y,lb_y,ub_y)
+% multi-cut generalized benders decomposition (MGBD) matlab-based programming code
 % Author: Chao Lei with The Hong Kong Polytechnic University
-% What kind of problems can hire this Modified GBD algorithm to solve?
+% What kind of problems can hire this MGBD algorithm to solve?
 % There are two conditions to be satisfied:
 % i) Convexity: the problem should be convex on y given the discrete variables x;
 % ii) Linear separability: the problem should be linear on x given the continuous variables y.
@@ -13,10 +13,10 @@ function [OptX,OptY,OptValue,k,delta_T,delta_T_MP] = General_MBD_socp(C,D,A,B,b,
 %                    F*x<=r_le;
 %                    G*x=r_ls;
 %                    y'*Q*y+l'*y<=g
-% Reference:[1] Geoffrion, Arthur M, "Generalized benders decomposition," Journal of optimization theory and applications, vol. 10, no. 4: pp. 237-260, 1972
+% Reference:[1] You, F., Grossmann, I.E, "Multicut Benders decomposition algorithm for process supply chain planning under uncertainty," Ann Oper Res, vol. 210, pp. 191¨C211, 2013.
+% [2] Geoffrion, Arthur M, "Generalized benders decomposition," Journal of optimization theory and applications, vol. 10, no. 4: pp. 237-260, 1972
 
-
-epsilon = 1e-4;                % stopping criteria of Modified GBD algorithm when abs(LB-UB) is less than epsilon
+epsilon = 1e-4;                % stopping criteria of MGBD algorithm when abs(LB-UB) is less than epsilon
 [nRowF,nColF] = size(F);
 [nRowG,nColG] = size(G);
 [nRowB,nColB] = size(B);
@@ -29,10 +29,10 @@ for j = 1 : n_block
 end
 g = gs;
 
-% initialization for Modified GBD
+% initialization for MGBD
 x0 = zeros(n_x,1);            % initial points for 0-1 integer variables
 LB = -1.0e18;
-UB = inf;
+UB = 0;
 p = 0;
 q = 0;
 options_cplex = cplexoptimset;  % cplex solver parameters
@@ -41,6 +41,7 @@ kmax = 10;
 k = 1;
 U = zeros(kmax,size(B,1));
 V = zeros(kmax,size(B,1));
+I_matrix = zeros(kmax,n_block);
 BZX_fea = zeros(kmax,1);
 BZX_inf = zeros(kmax,1);
 delta_T = zeros(n_block,kmax);
@@ -48,12 +49,9 @@ delta_T_MP = zeros(kmax,1);
 while k<kmax
     
     % -----step 1:solve sub-problem (SOCP-based model only with y)-------%
-    % generate multiple feasibility cuts of many independent sub-problems
-    true_sub_solution_flag = zeros(n_block,1);
-    U_temp = zeros(1,size(B,1));bZX_fea_temp = 0; UB0 = 0; y_optimal_temp = zeros(1,size(B,1));
-    
+    % generate multiple feasibility cuts in parallel of many independent sub-problems    
+    y_optimal_temp = zeros(1,size(B,1));
     for i = 1 : n_block
-        
         % convert SOCP-based model to a mosek standard representation
         D_block = D(n_y*(i-1)+1:i*n_y,1);
         B_block = B(n_y*(i-1)+1:i*n_y,n_y*(i-1)+1:i*n_y);
@@ -66,7 +64,8 @@ while k<kmax
         
         t11=clock;
         start_block = i;
-
+        % ------save more time if we do not callback mgbd_sp function-----%
+        % [sub_solution_flag, UB_y, u, bZX_fea, v, bZX_inf] = mgbd_sp(x0,D_block,A,B_block,b, E_block ,h_block,Q_block,g_block,l_block ,n_y, start_block);
         % ------------------ mgbd_sp function ---------%
         [nRowA_block,nColA] = size(A);
         [nRowB_block,nColB] = size(B_block);
@@ -111,7 +110,7 @@ while k<kmax
             y0 = res.sol.itr.xx(1:n_y,1)';
             
             % Dual variables for upper bounds of linear constraints
-            u = [res.sol.itr.suc(1:nRowB_block+nRowE_block,1);               %  for upper bounds of linear constraints
+            u = [res.sol.itr.suc(1:nRowB_block+nRowE_block,1);    %  for upper bounds of linear constraints
                 res.sol.itr.slc(1+nRowB_block:nRowB_block+nRowE_block,1);    % for lower bounds of linear constraints
                 ]';
             
@@ -119,15 +118,14 @@ while k<kmax
             
             ff =  res.sol.itr.snx(n_y+1,1)*( g_block - (y0*Q_block*y0' + l_block'*y0'));
             
-            
             bZX_fea =  -(  D_block'*y0(1,:)' +  ...
                 u(1,1:nRowB_block)*(B_block * y0(1,:)'-b((start_block-1)*n_y+1:start_block*n_y,1)) + u(1,1+nRowB_block:nRowB_block+nRowE_block)*( E_block *y0(1,1:n_y)'-h_block) ...
                 + u(1,1+nRowB_block+nRowE_block:nRowB_block+2*nRowE_block)*(-E_block*y0' + h_block ) -  ff );
             
             v = [];
             bZX_inf = [];
-            
-        % infeasible: if y in sub-problem is infeasible, then solve the realxed sub-problem model
+           
+            % infeasible: if y in sub-problem is infeasible, then solve the realxed sub-problem model
         elseif strcmp(res.sol.itr.solsta, 'PRIMAL_INFEASIBLE_CER')
             
             sub_solution_flag = 2;
@@ -145,8 +143,8 @@ while k<kmax
             prob.buc = [bs((start_block-1)*n_y+1:start_block*n_y,1) ;h_block; blc_socp];
             prob.blc = [-inf.*ones(2,1);h_block; blc_socp];
             
-            prob.blx = [0, lb_y',   blx_socp ];
-            prob.bux = [inf, ub_y',bux_socp];
+            prob.blx = [ 0, lb_y',   blx_socp ];
+            prob.bux = [inf,ub_y', bux_socp];
             
             % Specify the number of cones.
             prob.cones = cell(1 ,1);
@@ -159,7 +157,7 @@ while k<kmax
             %s = res.sol.itr.xx(1,1);
             
             % Dual variables
-            v = [res.sol.itr.suc(1:nRowB_block+nRowE_block,1);                %  for upper bounds of linear constraints
+            v = [res.sol.itr.suc(1:nRowB_block+nRowE_block,1);     %  for upper bounds of linear constraints
                 res.sol.itr.slc(1+nRowB_block:nRowB_block+nRowE_block,1);     % for lower bounds of linear constraints
                 ]';
             
@@ -179,43 +177,41 @@ while k<kmax
             q = q+1;
             V(q,[(start_block-1)*nRowB/n_block+1:(start_block-1)*nRowB/n_block + nRowB/n_block]) = v(1,1:nRowB/n_block);
             BZX_inf(q,1) = bZX_inf;
-        elseif sub_solution_flag == 1   % check if all sub-problems have optimality cuts
-            true_sub_solution_flag(i,1) = 1;
-            U_temp(1,[(start_block-1)*nRowB/n_block+1:(start_block-1)*nRowB/n_block + nRowB/n_block]) = u(1,1:nRowB/n_block);
-            bZX_fea_temp = bZX_fea_temp + bZX_fea;
-            UB0 = UB0 + UB_y;
             
-           y_optimal_temp(1,[(start_block-1)*nRowB/n_block+1:(start_block-1)*nRowB/n_block + nRowB/n_block]) = y0;
+        elseif  sub_solution_flag == 1  % generate multiple optimality cuts
+            p = p+1;
+            U(p,[(start_block-1)*nRowB/n_block+1:(start_block-1)*nRowB/n_block + nRowB/n_block]) = u(1,1:nRowB/n_block);
+            
+            I_matrix(p,i)=1;
+            
+            BZX_fea(p,1) = bZX_fea;
+            UB = UB + UB_y ;
+             y_optimal_temp(1,[(start_block-1)*nRowB/n_block+1:(start_block-1)*nRowB/n_block + nRowB/n_block]) = y0;
         end
+        
         
         t22 = clock;
         delta_T(i,k) = etime(t22,t11);
         
     end
     
-    if  all(true_sub_solution_flag) == 1  % generate one optimality cut
-        p = p+1;
-        U(p,:) = U_temp;
-        BZX_fea(p,1) = bZX_fea_temp;
-        UB = UB0 + C'*x0;
-        OptY = y_optimal_temp';
-    end
+
     
     % -----------step2: solve relaxed master model-------------%
-    CoefZ = 1;
-    f = [CoefZ,zeros(1,n_x)];                                         % coefficients of objective function
+    CoefZ = ones(1,n_block);
+    f = [CoefZ,C'];                                         % coefficients of objective function
     if p>0 && q > 0
-        CoefMatZX = sparse([zeros(nRowF,1) F
-            -repmat(CoefZ,p,1)  repmat(C',p,1)+ U(1:p,1:nRowB)*A  ;   % optimality cuts
-            zeros(q,1) V(1:q,1:nRowB)*A                               % multiple feasibility cuts
+        CoefMatZX = sparse([zeros(nRowF,n_block) F
+            -I_matrix(1:p,:)   U(1:p,1:nRowB)*A  ;                          % optimality cuts
+            zeros(q,n_block) V(1:q,1:nRowB)*A                               % feasibility cuts
             ]);
     elseif p==0
-        CoefMatZX = [zeros(nRowF,1) F
-            zeros(q,1)      V(1:q,1:nRowB)*A                          % multiple feasibility cuts
+        CoefMatZX = [zeros(nRowF,n_block) F
+            zeros(q,n_block)      V(1:q,1:nRowB)*A                          % feasibility cuts
             ];
     elseif q==0
-        CoefMatZX = sparse([zeros(nRowF,1) F
-            -repmat(CoefZ,p,1)  repmat(C',p,1)+ U(1:p,1:nRowB)*A  ;   % optimality cuts
+        CoefMatZX = sparse([zeros(nRowF,n_block) F
+                     -I_matrix   U(1:p,1:nRowB)*A  ;                        % optimality cuts
             ]);
     end
     
@@ -224,19 +220,18 @@ while k<kmax
         BZX_inf(1:q,1)
         ];
     
-    vlb = zeros(1,n_x + 1 );
-    vub = [ inf, ones(1,n_x) ];
-    ctype = char([ repmat({'C'},1,1) repmat({'I'},1,size(C,1))])';
+    vlb = zeros(1,n_x + n_block );
+    vub = [ inf*ones(1,n_block), ones(1,n_x) ];
+    ctype = char([ repmat({'C'},1,n_block) repmat({'I'},1,size(C,1))])';
     
     t1 = clock;
-    [OptZX,minZ,ExitflagBint] = cplexmilp(f,CoefMatZX,bZX, sparse([zeros(nRowG,1) G]), r_ls,[ ], [ ], [ ], vlb, vub, ctype, [ ],options_cplex );
+    [OptZX,minZ,ExitflagBint] = cplexmilp(f,CoefMatZX,bZX, sparse([zeros(nRowG,n_block) G]), r_ls,[ ], [ ], [ ], vlb, vub, ctype, [ ],options_cplex );
     t2 = clock;
     delta_T_MP(k,1) = etime(t2,t1);
-    
-    
+
     if ExitflagBint ==1
-        LB = minZ ;
-        x0 = OptZX(2:end);
+        x0 = OptZX(n_block+1:end); 
+        LB = minZ-C'*x0;
     else
         fprintf('Error:iterations of GBD algorithm are terminated.');
         break;
@@ -254,4 +249,5 @@ while k<kmax
     
 end
 OptX = x0;
+OptY =  y_optimal_temp';
 OptValue = C'*OptX + D'*OptY;

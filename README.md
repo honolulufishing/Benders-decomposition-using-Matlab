@@ -34,7 +34,7 @@ Based on the above-mentioned MISOCP problem, we use the multi-cut generalized be
 
 Please note that this model needs to satisfy the above-mentioned two conditions and also the third condition: iii) Linear independence: with given discrete variables x, different groups of continuous variables y are linearly independent.
 
-To examine the efficiency of this family of benders decompositon methods, we compare the running time for a large-scale MISOCP-based optimization problem. This MISOCP problem contains 5 binary variables and 4 continuous variables in the basic scenario. Increasing the number of scenarios M, the number of binary variables and continuous variables are risen to 5*M and 4*M. Please refers to TEST_Time_large.m in our package.
+To examine the efficiency of this family of benders decompositon methods, we compare the running time for a large-scale MISOCP-based optimization problem. This MISOCP problem contains 5 binary variables and 4 continuous variables in the basic scenario. Increasing the number of scenarios M, the number of binary variables and continuous variables are risen to 5*M and 4*M. 
 
 Solvers:
 - MILP solver : CPLEX v12.7
@@ -63,4 +63,4 @@ Author: Chao Lei
 
 Email: 21118924r@connect.polyu.hk 
 
-July, 2022
+April, 2022

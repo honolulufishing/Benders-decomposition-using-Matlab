@@ -1,10 +1,10 @@
-function [OptX,OptY,OptValue,k] = Classic_BD(C,D,A,B,b,E,h,F,r_le,G,r_ls)
-% classical benders decomposition (CBD) matlab-based programming code
+function [OptX,OptY,OptValue,k] = Classic_BD(C,D,A,B,b,E,h,F,r_le,G,r_ls,lb_y,ub_y)
+% Classical benders decomposition (CBD) matlab-based programming code
 % Author: Chao Lei with The Hong Kong Polytechnic University 
 % What kind of problems can hire this CBD algorithm to solve?
 % This kind of problems is w.r.t. the following form:
 %         min  C*x+D*y
-%         s.t. A*x+B*y<=b; x in {0,1},and y>=0
+%         s.t. A*x+B*y<=b; x in {0,1},and lb_y <= y <= ub_y
 %              E*y=h;
 %              F*x<=r_le;
 %              G*x=r_ls;
@@ -32,9 +32,9 @@ options_cplex = cplexoptimset;
 options_cplex.Display = 'off';
 options = optimset('LargeScale', 'off', 'Simplex', 'on');
 while k<kmax
-    
+
     %-----step 1:solve sub-problem (LP-based model only with y)-------%
-    [UorV,fval,exitflag] = linprog((-At*x0+bt),-Bt',D',[],[],zeros(nRowB,1),inf(nRowB,1),[],options);
+    [UorV,fval,exitflag] = linprog((-At*x0+bt),-Bt',D',[],[], lb_y, ub_y,[],options);
     if exitflag == 1 % if sub-problem has extreme points
         p = p+1;
         u(p,:) = UorV'; % extreme points
@@ -47,14 +47,14 @@ while k<kmax
 
     % -----------step2: solve relaxed master model-------------%
     CoefZ = 1;
-    f = [CoefZ,zeros(1,nColA)];                                        % coefficients of objective function
+    f = [CoefZ,zeros(1,nColA)];                                  % coefficients of objective function
     if p>0
-        CoefMatZX = [-ones(p,1), repmat(C',p,1) + u(1:p,:)*At;   % optimal cuts
-        zeros(q,1),v(1:q,:)*At ;                                % feasible cuts
+        CoefMatZX = [-ones(p,1), repmat(C',p,1) + u(1:p,:)*At;   % optimality cuts
+        zeros(q,1),v(1:q,:)*At ;                                 % feasibility cuts
             ];
     else
         CoefMatZX = [
-        zeros(q,1),v(1:q,:)*At ;                   % feasible cuts            
+        zeros(q,1),v(1:q,:)*At ;                                % feasibility cuts     
             ];
     end
     

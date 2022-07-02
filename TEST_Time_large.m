@@ -2,16 +2,6 @@
 clc;clear all
 
 % Example 1:a socp problem
-% -------- Approach 1:use multi-cut generalized benders decomposition method to tackle a MISOCP-based model------- %
-% where sub-problem is a SOCP-based model and relaxed master model is a MILP-based model
-% w.r.t. the following form:
-%         min  C*x+D*y
-%         s.t. A*x+B*y<=b; x in {0,1},and y>=0
-%              E*y=h;
-%              F*x<=r_le;
-%              G*x=r_ls;
-%              y'*Q*y+l'*y<=g
-
 Num = 100;
 Ct = [7 7 7 7 7]';
 Dt = [1 1 1 1]';
@@ -69,23 +59,23 @@ gs = repmat(gst,Num*4/2,1);
 
 ls = zeros(4*Num,Num*4);
 
-% use multi-cut generalized benders decomposition method
-n_block = Num*4/2;                  % Number of blocks in matrix B
+% Number of blocks in matrix B
+n_block = Num*4/2;                  
 n_y = 2;
+lb_y = zeros(1,n_y)';
+ub_y = inf.*ones(1,n_y)';
 
-[OptX,OptY,OptValue,k,delta_T,delta_T_MP] = General_MBD_socp(C,D,A,B,b,E,h,F,r_le,G,r_ls,Qs,gs,ls,n_block,n_y);
+% -------- Approach 1:use multi-cut generalized benders decomposition method to tackle a MISOCP-based model------- %
+[OptX,OptY,OptValue,k,delta_T,delta_T_MP] = General_AMBD_socp(C,D,A,B,b,E,h,F,r_le,G,r_ls,Qs,gs,ls,n_block,n_y,lb_y,ub_y);
 
 % time consumption of SP and MP
 sum(max(delta_T)) + sum(delta_T_MP) - sum(sum(delta_T_MP)) 
 
-
-% -------- Approach 2:use multi-cut generalized benders decomposition method to tackle a MISOCP-based model------- %
-% use generalized benders decomposition method
-[OptX,OptY,OptValue,k,delta_T,delta_T_MP] = General_BD_socp(C,D,A,B,b,E,h,F,r_le,G,r_ls,Qs,gs,ls);
+% -------- Approach 2:use generalized benders decomposition method to tackle a MISOCP-based model------- %
+[OptX,OptY,OptValue,k,delta_T,delta_T_MP] = General_MBD_socp(C,D,A,B,b,E,h,F,r_le,G,r_ls,Qs,gs,ls,n_block,n_y,lb_y,ub_y);
 
 % time consumption of SP and MP
-sum(delta_T,1) + sum(delta_T_MP,1)
-
+sum(max(delta_T)) + sum(delta_T_MP) - sum(sum(delta_T_MP)) 
 
 % -------- Approach 3:use mosek tools to solve this problem------- %
 t1 = clock;
